@@ -1,4 +1,8 @@
 #include "setup.h"
+#include <string>
+#include <vector>
+#include <iostream>
+#include <fstream>
 
 /* accesible by main */
 SDL_Renderer* ren;
@@ -10,8 +14,8 @@ Node* nodes[GRID_WIDTH * GRID_HEGIHT];
 SDL_Event event;
 void initNodes();
 void cleanupNodes();
-void renderNodes();
-
+std::string getProjectPath();
+std::vector<std::string> getImageNames(std::string ProjectPath);
 
 void setup()
 {
@@ -27,6 +31,8 @@ void setup()
     SDL_ShowCursor(SDL_DISABLE);
 
     initNodes();
+
+    getImageNames( getProjectPath() );
 }
 
 bool done()
@@ -85,4 +91,33 @@ void renderNodes()
     {
         nodes[i]->Render();
     }
+}
+
+std::string getProjectPath()
+{
+    char* charPath = SDL_GetBasePath();
+    
+    std::string strPath = charPath;
+    
+    SDL_free(charPath);
+
+    return strPath;
+}
+
+std::vector<std::string> getImageNames(std::string projectPath)
+{
+    std::vector<std::string> imageNames;
+
+    std::ifstream file(projectPath + "images.txt");
+
+    while( file )
+    {
+        std::string line;
+
+        std::getline( file, line );
+
+        std::cout << line << std::endl;
+    }
+
+    return imageNames;
 }
