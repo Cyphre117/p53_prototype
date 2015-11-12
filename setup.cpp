@@ -217,7 +217,7 @@ void loadImages( std::vector<std::string> imageNames )
         
         // set magenta as the trasparent colour
         //TODO: use SDL_image and have proper transparency
-        SDL_SetColorKey(bmp, SDL_TRUE, SDL_MapRGB(bmp->format, 255, 64, 255));
+        SDL_SetColorKey(bmp, SDL_TRUE, SDL_MapRGB(bmp->format, 255, 0, 255));
         
         SDL_Texture* tex = SDL_CreateTextureFromSurface( ren, bmp );
         if( tex == nullptr )
