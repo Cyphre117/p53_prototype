@@ -11,10 +11,12 @@ public:
     ~Node();
 
     // pretends the hexagon is a circle
-    bool isOver(int x, int y);
+    bool isOverCircle(int x, int y);
 
     // draws the edges of the hexagon pointy topped
-    void Render();
+    void RenderOutline();
+
+    void RenderTexture();
     
     // the centre of the node
     SDL_Point centre;
@@ -25,6 +27,8 @@ public:
     // colour of the outline
     // RGBA
     Uint32 colour;
+
+    SDL_Texture* texture;
 };
 
 #endif

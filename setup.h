@@ -2,10 +2,11 @@
 #define SETUP_H
 
 #include <SDL2/SDL.h>
+#include <vector>
 #include "node.h"
 
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
 #define RADIUS 32
 #define GRID_WIDTH (SCREEN_WIDTH/(RADIUS*2))
@@ -44,6 +45,12 @@ void display();
 
 // draws all the nodes on the board
 void renderNodes();
+
+void updateNodes();
+
+void renderCursor();
+
+void Menu();
 
 // cleanup SDL resources
 void cleanup();
