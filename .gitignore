@@ -1,3 +1,7 @@
 *.swp
 *.out
 *.txt
+*.dll
+*.exe
+*.db
+visual_studio/*

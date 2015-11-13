@@ -1,7 +1,7 @@
 #include "node.h"
 
-Node::Node(int x, int y, int r, Uint32 c):
-centre{x,y},
+Node::Node(int x, int y, int r, Uint32 c) :
+centre(SDL_Point{x,y}),
 radius(r),
 colour(c),
 texture(nullptr)

@@ -110,7 +110,6 @@ void renderNodes()
             nodes[i]->colour = 0xffffffff;
         }
     }
-
 }
 
 void updateNodes()
@@ -151,7 +150,6 @@ void Menu()
                 currentTexture = node->texture;
             }
         }
-
     }
 }
 
@@ -183,6 +181,16 @@ std::vector<std::string> getImageNames()
         
         // ignore if string is empty
         if( name.empty() ) continue;
+
+		// assume file paths contain forward slashes
+#if defined(__WIN32__)
+		// if on windows replace '/' with '\'
+		for (auto& c : name)
+		{
+			if (c == '/')
+				c = '\\';
+		}
+#endif
 
         std::cout << "\t" << name << std::endl;
 

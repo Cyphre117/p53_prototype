@@ -2,7 +2,12 @@
 #include "setup.h"
 #include "node.h"
 
-int main()
+// removed SDLs redefiniton of main when not necessary
+#if defined(SDL_MAIN_AVAILABLE)
+	#undef main
+#endif
+
+int main(int argc, char *argv[])
 {
     setup();
     
