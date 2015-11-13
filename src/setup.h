@@ -5,8 +5,8 @@
 #include <vector>
 #include "node.h"
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 700
 
 #define RADIUS 32
 #define GRID_WIDTH (SCREEN_WIDTH/(RADIUS*2))

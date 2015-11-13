@@ -95,7 +95,7 @@ void renderNodes()
 {
     for(int i = 0; i < GRID_WIDTH * GRID_HEGIHT; i++)
     {
-        nodes[i]->RenderOutline();
+        //nodes[i]->RenderOutline();
     }
     for(int i = 0; i < GRID_WIDTH * GRID_HEGIHT; i++)
     {
@@ -204,6 +204,7 @@ void loadImages( std::vector<std::string> imageNames )
 {
     int x = RADIUS;
     int y = RADIUS;
+
     for( int i = 0; i < (int)imageNames.size(); i++ )
     {
         std::string name = imageNames[i];
@@ -219,29 +220,53 @@ void loadImages( std::vector<std::string> imageNames )
             continue;
         }
 
-        SDL_Texture* tex = SDL_CreateTextureFromSurface( ren, bmp );
-        if( tex == nullptr )
+		// create a default texture and 3 for tints
+		SDL_Texture* tex  = SDL_CreateTextureFromSurface(ren, bmp);
+		SDL_Texture* texR = SDL_CreateTextureFromSurface(ren, bmp);
+		SDL_Texture* texG = SDL_CreateTextureFromSurface(ren, bmp);
+		SDL_Texture* texB = SDL_CreateTextureFromSurface(ren, bmp);
+		SDL_FreeSurface(bmp);
+
+		// if any of the textures failed report an error
+		if (tex == nullptr || texR == nullptr || texG == nullptr || texB == nullptr)
         {
-            std::cout << "SDL_CreatTexturFromSurface Error: " << SDL_GetError() << std::endl;
+            std::cout << "SDL_CreatTextureFromSurface Error: " << SDL_GetError() << std::endl;
             continue;
         }
         
         // tell the texture to use alpha
-        SDL_SetTextureBlendMode( tex, SDL_BLENDMODE_BLEND );
+		SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+		SDL_SetTextureBlendMode(texR, SDL_BLENDMODE_BLEND);
+		SDL_SetTextureBlendMode(texG, SDL_BLENDMODE_BLEND);
+		SDL_SetTextureBlendMode(texB, SDL_BLENDMODE_BLEND);
 
-        SDL_FreeSurface( bmp );
 
-        x += RADIUS * 2;
+		// Tint the textures
+		SDL_SetTextureColorMod(texR, 255,   0,   0);
+		SDL_SetTextureColorMod(texG,   0, 255,   0);
+		SDL_SetTextureColorMod(texB,   0,   0, 255);
 
-        if( x > SCREEN_WIDTH )
-        {
-            x = RADIUS;
-            y += RADIUS * 2;
-        }
+		// add the 4 new textures to the colour list
+		for (int t = 0; t < 4; t++)
+		{
+			x += RADIUS * 2;
+			if (x > SCREEN_WIDTH)
+			{
+				x = RADIUS;
+				y += RADIUS * 2;
+			}
+			textures.push_back(new Node(x, y, RADIUS));
 
-        textures.push_back( new Node(x,y,RADIUS) );
-        textures.back()->texture = tex;
-
+			switch (t)
+			{
+			case 0: textures.back()->texture = tex; break;
+			case 1: textures.back()->texture = texR; break;
+			case 2: textures.back()->texture = texG; break;
+			case 3: textures.back()->texture = texB; break;
+			default: break;
+			}
+			
+		}
         std::cout << "Success!" << std::endl;
     }
 }
