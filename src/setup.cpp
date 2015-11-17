@@ -66,7 +66,6 @@ bool done()
 			} else if (event.wheel.y < 0) {
 				viewScale -= 0.05f;
 			}
-			std::cout << "scale: " << viewScale << std::endl;
 		}
 		if (event.type == SDL_MOUSEMOTION) {
 			if (event.motion.x != SCREEN_WIDTH / 2 && event.motion.y != SCREEN_HEIGHT / 2)
