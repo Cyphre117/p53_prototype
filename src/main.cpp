@@ -16,14 +16,15 @@ int main(int argc, char *argv[])
         if( SDL_GetKeyboardState(NULL)[SDL_SCANCODE_SPACE] )
         {
             Menu();
+			renderCursor(mouse.x, mouse.y);
         }
         else
         {
             updateNodes();
-            renderNodes();
+			renderNodes();
+			renderCursor(mouse.x + viewport.x, mouse.y + viewport.y);
         }
-
-        renderCursor();        
+        
         display();
     }
     

@@ -8,28 +8,36 @@
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 700
 
+// its probably better if this is always a square
+#define BOARD_WIDTH 2048
+#define BOARD_HEIGHT 2048
+
 #define RADIUS 32
-#define GRID_WIDTH (SCREEN_WIDTH/(RADIUS*2))
-#define GRID_HEGIHT int(SCREEN_HEIGHT/(RADIUS*1.5))
+#define GRID_WIDTH (BOARD_WIDTH/(RADIUS*2))
+#define GRID_HEGIHT int(BOARD_HEIGHT/(RADIUS*1.5))
 
 extern SDL_Renderer* ren;
 extern SDL_Window* win;
 extern Node* nodes[GRID_WIDTH * GRID_HEGIHT];
+extern SDL_Rect viewport;
 
 class Mouse {
 public:
-    Mouse():x(0),y(0),pressed(false),down(false),wasDown(false) {}
+    Mouse():x(SCREEN_WIDTH/2),y(SCREEN_HEIGHT/2),pressed(false),down(false),wasDown(false) {}
     ~Mouse() {}
     void Update() {
         wasDown = down;
-        down = SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_LEFT);
+		Uint32 buttons = SDL_GetMouseState(NULL, NULL);
+		down = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
+		altDown = buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
         pressed = (down == true && wasDown == false);
     }
     int x,y;
-    bool pressed;
-    bool down;
+    bool pressed; // left mouse transitioned from up to down
+    bool down; // left mouse is down
+	bool altDown; // right mouse is down
 private:
-    bool wasDown;
+    bool wasDown; 
 };
 extern Mouse mouse;
 
@@ -48,7 +56,7 @@ void renderNodes();
 
 void updateNodes();
 
-void renderCursor();
+void renderCursor(int x, int y);
 
 void Menu();
 

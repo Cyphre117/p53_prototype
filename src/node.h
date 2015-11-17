@@ -7,7 +7,7 @@ extern SDL_Renderer* ren;
 
 class Node {
 public:
-    Node(int x, int y, int r, Uint32 c = 0xffffffff);
+    Node(int x, int y, int r);
     ~Node();
 
     // pretends the hexagon is a circle
@@ -23,10 +23,6 @@ public:
 
     // from flat edge to falt edge
     int radius;
-
-    // colour of the outline
-    // RGBA
-    Uint32 colour;
 
     SDL_Texture* texture;
 };

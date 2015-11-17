@@ -11,6 +11,10 @@ Mouse mouse;
 Node* nodes[GRID_WIDTH * GRID_HEGIHT];
 SDL_Texture* currentTexture;
 
+SDL_Texture* renderTarget;
+SDL_Rect viewport{ BOARD_WIDTH / 2 - SCREEN_WIDTH / 2, BOARD_HEIGHT / 2 - SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT };
+float viewScale = 1.0f;
+
 /* limited to setup */
 SDL_Event event;void initNodes();
 void cleanupNodes();
@@ -31,6 +35,10 @@ void setup()
 
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
+	// render everything to the render target and copy the relevant section into the window for scaling / zooming
+	renderTarget = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, BOARD_WIDTH, BOARD_HEIGHT);
+	SDL_SetRenderTarget(ren, renderTarget);
+
     SDL_ShowCursor(SDL_DISABLE);
 
     initNodes();
@@ -42,22 +50,81 @@ void setup()
 
 bool done()
 {
+	bool left = false, right = false, up = false, down = false;
+
     while( SDL_PollEvent(&event))
     {
         if( event.type == SDL_QUIT) return true;
         if( event.type == SDL_KEYDOWN )
         {
-            if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) return true;
+			if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) return true;
         }
+		if (event.type == SDL_MOUSEWHEEL) {
+			//zoom in and out
+			if (event.wheel.y > 0) {
+				viewScale += 0.05f;
+			} else if (event.wheel.y < 0) {
+				viewScale -= 0.05f;
+			}
+			std::cout << "scale: " << viewScale << std::endl;
+		}
+		if (event.type == SDL_MOUSEMOTION) {
+			if (event.motion.x != SCREEN_WIDTH / 2 && event.motion.y != SCREEN_HEIGHT / 2)
+			{
+				mouse.x += std::ceil(event.motion.xrel * (viewScale));
+				mouse.y += std::ceil(event.motion.yrel * (viewScale));
+				SDL_WarpMouseInWindow(win, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
+				// move the viewport while holding the right mouse
+				if (mouse.altDown) {
+					viewport.x -= std::ceil(event.motion.xrel * (viewScale));
+					viewport.y -= std::ceil(event.motion.yrel * (viewScale));
+				}
+			}
+		}
         mouse.Update();
     }
+
+	const Uint8* keyboard = SDL_GetKeyboardState(NULL);
+
+	// constrin mouse
+	if (mouse.x < 0) mouse.x = 0;
+	if (mouse.y < 0) mouse.y = 0;
+	if (mouse.x > viewport.w) mouse.x = viewport.w;
+	if (mouse.y > viewport.h) mouse.y = viewport.h;
+
+	// constain view scale
+	if (viewScale < 0.1f) viewScale = 0.1f;
+	if (viewScale > BOARD_WIDTH / (float)SCREEN_WIDTH) viewScale = BOARD_WIDTH / (float)SCREEN_WIDTH;
+	viewport.w = SCREEN_WIDTH * viewScale;
+	viewport.h = SCREEN_HEIGHT * viewScale;
+
+	// constrain viewport position to window
+	if (viewport.x < 0) viewport.x = 0;
+	if (viewport.y < 0) viewport.y = 0;
+	if (viewport.x > BOARD_WIDTH - viewport.w) viewport.x = BOARD_WIDTH - viewport.w;
+	if (viewport.y > BOARD_HEIGHT - viewport.y) viewport.y = BOARD_HEIGHT - viewport.y;
 
     return false;
 }
 
 void display()
 {
-    SDL_RenderPresent(ren);
+	//if your in the menu just use the full screen
+	SDL_Rect fullscreen{ 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+
+	// copy the big texture to the renderer
+	SDL_SetRenderTarget(ren, NULL);
+
+	if (SDL_GetKeyboardState(NULL)[SDL_SCANCODE_SPACE])
+		SDL_RenderCopy(ren, renderTarget, &fullscreen, NULL);
+	else
+		SDL_RenderCopy(ren, renderTarget, &viewport, NULL);
+    
+	SDL_RenderPresent(ren);
+	SDL_SetRenderTarget(ren, renderTarget);
+
+	// clear the render target
     SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
     SDL_RenderClear(ren);
 }
@@ -93,6 +160,8 @@ void cleanupNodes()
 
 void renderNodes()
 {
+
+	SDL_SetRenderDrawColor(ren, 100, 100, 100, 255);
     for(int i = 0; i < GRID_WIDTH * GRID_HEGIHT; i++)
     {
         //nodes[i]->RenderOutline();
@@ -103,11 +172,10 @@ void renderNodes()
     }    
     for(int i = 0; i < GRID_WIDTH * GRID_HEGIHT; i++)
     {
-        if( nodes[i]->isOverCircle(mouse.x, mouse.y) )
-        {
-            nodes[i]->colour = 0xff00ffff;
+        if( nodes[i]->isOverCircle(mouse.x + viewport.x, mouse.y + viewport.y) )
+		{
+			SDL_SetRenderDrawColor(ren, 255, 0, 255, 255);
             nodes[i]->RenderOutline();
-            nodes[i]->colour = 0xffffffff;
         }
     }
 }
@@ -116,7 +184,7 @@ void updateNodes()
 {
     for( int i = 0; i < GRID_WIDTH * GRID_HEGIHT; i++ )
     {
-        if( nodes[i]->isOverCircle( mouse.x, mouse.y ) )
+        if( nodes[i]->isOverCircle( mouse.x + viewport.x, mouse.y + viewport.y) )
         {
             if( mouse.down )
             {
@@ -141,7 +209,8 @@ void Menu()
 
         // highlight the currently over texture
         if( node->isOverCircle(mouse.x, mouse.y) )
-        {
+		{
+			SDL_SetRenderDrawColor(ren, 255, 0, 255, 255);
             node->RenderOutline();
             
             // set the current texture to that texture if pressed
@@ -153,11 +222,11 @@ void Menu()
     }
 }
 
-void renderCursor()
+void renderCursor(int x, int y)
 {
     SDL_SetRenderDrawColor(ren, 255, 0, 255, 255);
-    SDL_RenderDrawLine(ren, mouse.x - 4, mouse.y, mouse.x + 4, mouse.y);
-    SDL_RenderDrawLine(ren, mouse.x, mouse.y - 4, mouse.x, mouse.y + 4);
+    SDL_RenderDrawLine(ren, x - 4, y, x + 4, y);
+    SDL_RenderDrawLine(ren, x, y - 4, x, y + 4);
 }
 
 std::vector<std::string> getImageNames()

@@ -1,9 +1,8 @@
 #include "node.h"
 
-Node::Node(int x, int y, int r, Uint32 c) :
+Node::Node(int x, int y, int r) :
 centre(SDL_Point{x,y}),
 radius(r),
-colour(c),
 texture(nullptr)
 {
 }
@@ -25,12 +24,6 @@ bool Node::isOverCircle(int x, int y)
 
 void Node::RenderOutline()
 {
-    SDL_SetRenderDrawColor( ren,
-            colour >> 24 & 0xff,
-            colour >> 16 & 0xff,
-            colour >>  8 & 0xff,
-            colour       & 0xff );
-
     // left side
     SDL_RenderDrawLine( ren, centre.x - radius, centre.y + radius/2 + 1,
             centre.x - radius, centre.y - radius/2 );
