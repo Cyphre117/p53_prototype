@@ -5,6 +5,8 @@
 
 extern SDL_Renderer* ren;
 
+enum CellType {Small, Medium, Large};
+
 class Node {
 public:
     Node(int x, int y, int r);
@@ -23,6 +25,8 @@ public:
 
     // from flat edge to falt edge
     int radius;
+
+	enum CellType type;
 
     SDL_Texture* texture;
 };

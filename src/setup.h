@@ -25,13 +25,17 @@ class Mouse {
 public:
     Mouse():x(SCREEN_WIDTH/2),y(SCREEN_HEIGHT/2),pressed(false),down(false),wasDown(false) {}
     ~Mouse() {}
-    void Update() {
+    void Update()
+	{
         wasDown = down;
+
 		Uint32 buttons = SDL_GetMouseState(NULL, NULL);
 		down = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
 		altDown = buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
+
         pressed = (down == true && wasDown == false);
     }
+
     int x,y;
     bool pressed; // left mouse transitioned from up to down
     bool down; // left mouse is down

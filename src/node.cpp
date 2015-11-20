@@ -3,7 +3,8 @@
 Node::Node(int x, int y, int r) :
 centre(SDL_Point{x,y}),
 radius(r),
-texture(nullptr)
+texture(nullptr),
+type(Small)
 {
 }
 
@@ -48,7 +49,31 @@ void Node::RenderTexture()
 {
     if( texture != nullptr )
     {
-        SDL_Rect dest{centre.x - radius, centre.y - radius, radius * 2, radius * 2};
+		// type = small
+        SDL_Rect dest;
+
+		if (type == Small)
+		{
+			dest.x = centre.x - radius;
+			dest.y = centre.y - radius;
+			dest.w = radius * 2;
+			dest.h = radius * 2;
+		}
+		else if (type == Medium)
+		{
+			dest.x = centre.x - radius * 3;
+			dest.y = centre.y - radius * 3;
+			dest.w = radius * 6;
+			dest.h = radius * 6;
+		}
+		else
+		{
+			dest.x = centre.x - radius * 5;
+			dest.y = centre.y - radius * 5;
+			dest.w = radius * 10;
+			dest.h = radius * 10;
+		}
+
         SDL_RenderCopy( ren, texture, NULL, &dest );
     }
 }

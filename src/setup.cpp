@@ -66,12 +66,15 @@ bool done()
 			} else if (event.wheel.y < 0) {
 				viewScale -= 0.05f;
 			}
+			std::cout << viewScale << std::endl;
 		}
+
+		/*
 		if (event.type == SDL_MOUSEMOTION) {
 			if (event.motion.x != SCREEN_WIDTH / 2 && event.motion.y != SCREEN_HEIGHT / 2)
 			{
-				mouse.x += std::ceil(event.motion.xrel * (viewScale));
-				mouse.y += std::ceil(event.motion.yrel * (viewScale));
+				mouse.x += std::ceil(event.motion.xrel * ((viewScale * 2 < 1.0f)?viewScale * 2:1.0f) );
+				mouse.y += std::ceil(event.motion.yrel * ((viewScale * 2 < 1.0f)?viewScale * 2:1.0f) );
 				SDL_WarpMouseInWindow(win, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
 				// move the viewport while holding the right mouse
@@ -80,9 +83,28 @@ bool done()
 					viewport.y -= std::ceil(event.motion.yrel * (viewScale));
 				}
 			}
-		}
-        mouse.Update();
+		}*/
     }
+
+	int mx, my;
+	SDL_GetMouseState(&mx, &my);
+	if (mx != SCREEN_WIDTH / 2 || my != SCREEN_HEIGHT / 2)
+	{
+		SDL_WarpMouseInWindow(win, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+		int xrel = mx - SCREEN_WIDTH / 2;
+		int yrel = my - SCREEN_HEIGHT / 2;
+
+		mouse.x += std::ceil(xrel * ((viewScale * 2 < 1.0f) ? viewScale * 2 : 1.0f));
+		mouse.y += std::ceil(yrel * ((viewScale * 2 < 1.0f) ? viewScale * 2 : 1.0f));
+
+		if (mouse.altDown) {
+			viewport.x -= xrel;
+			viewport.y -= yrel;
+		}
+	}
+
+
+    mouse.Update();
 
 	const Uint8* keyboard = SDL_GetKeyboardState(NULL);
 
@@ -159,7 +181,6 @@ void cleanupNodes()
 
 void renderNodes()
 {
-
 	SDL_SetRenderDrawColor(ren, 100, 100, 100, 255);
     for(int i = 0; i < GRID_WIDTH * GRID_HEGIHT; i++)
     {
@@ -185,10 +206,24 @@ void updateNodes()
     {
         if( nodes[i]->isOverCircle( mouse.x + viewport.x, mouse.y + viewport.y) )
         {
+			if( mouse.pressed == true && nodes[i]->texture == currentTexture )
+			{
+				// cycle cell types
+				switch (nodes[i]->type)
+				{
+				case Small: nodes[i]->type = Medium; break;
+				case Medium: nodes[i]->type = Large; break;
+				default: nodes[i]->type = Small; break;
+				}
+			}
             if( mouse.down )
             {
                 nodes[i]->texture = currentTexture;
-            }
+
+				// for the cell to normal if it's empty
+				if (currentTexture == nullptr)
+					nodes[i]->type = Small;
+            }			
         }
     }
 }
