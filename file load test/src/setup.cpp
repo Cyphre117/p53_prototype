@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include <SDL2/SDL_image.h>
 
 /* accesible by main */
