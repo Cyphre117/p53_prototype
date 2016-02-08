@@ -9,9 +9,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// Screen Resolution
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
+// Specify matricies
+glm::mat4 model_matix;
+glm::mat4 view_matrix = glm::lookAt(
+    glm::vec3(0.0f, 0.0f, 1.0f), // Position
+    glm::vec3(0.0f, 0.0f, 0.0f), // Look at
+    glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
+);
+///////////////////////////////////////// verticle FOV, Aspect Ratio, Near plane, far plane
+glm::mat4 proj_matrix = glm::perspective( glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f );
+
+void move( glm::vec3 mv );
 GLuint compile_frag_shader( std::string filename );
 GLuint compile_vert_shader( std::string filename );
 
@@ -44,10 +56,10 @@ int main(int argc, char* argv[])
     glGenBuffers(1, &vbo);
 
     GLfloat verts[] = {
-       -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top left
-        1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top right
-       -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // bottom left
-        1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f  // bottom right
+       -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top left
+        0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top right
+       -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // bottom left
+        0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f  // bottom right
     };
 
 
@@ -110,15 +122,6 @@ int main(int argc, char* argv[])
     glLinkProgram( shaderProgram );
     glUseProgram( shaderProgram );
     
-    // Specify matricies
-    glm::mat4 model_matix;
-    glm::mat4 view_matrix = glm::lookAt(
-        glm::vec3(0.0f, 0.0f, 1.0f), // Position
-        glm::vec3(0.0f, 0.0f, 0.0f), // Look at
-        glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
-    );
-    //                                          verticle FOV, Aspect Ratio, Near plane, far plane
-    glm::mat4 proj_matrix = glm::perspective( glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f );
 
     // Set the vertex attributes, to align with the vertex array
     GLuint vao;
@@ -190,8 +193,10 @@ int main(int argc, char* argv[])
         glUniform4f( tint, 0.0, green, blue, 1.0);
         glUniform4f( line, brightness, brightness, brightness, 1.0);
 
-        if( keys[SDL_SCANCODE_RIGHT] ) model_matix = glm::translate( model_matix, glm::vec3( 1.f * dt, 0.0f, 0.0f) );
-        if( keys[SDL_SCANCODE_LEFT ] ) model_matix = glm::translate( model_matix, glm::vec3(-1.f * dt, 0.0f, 0.0f) );
+        if( keys[SDL_SCANCODE_RIGHT] ) move( glm::vec3( 1.0f * dt, 0.0f, 0.0f ) );
+        if( keys[SDL_SCANCODE_LEFT ] ) move( glm::vec3(-1.0f * dt, 0.0f, 0.0f ) );
+        if( keys[SDL_SCANCODE_DOWN ] ) move( glm::vec3( 0.0f,-1.0f * dt, 0.0f ) );
+        if( keys[SDL_SCANCODE_UP   ] ) move( glm::vec3( 0.0f, 1.0f * dt, 0.0f ) );
 
         // Send Matricies
         glUniformMatrix4fv( model_uni, 1, GL_FALSE, glm::value_ptr( model_matix ) );
@@ -214,6 +219,21 @@ int main(int argc, char* argv[])
     SDL_GL_DeleteContext(context);
     SDL_Quit();
     return 0;
+}
+
+void move( glm::vec3 mv )
+{
+    static glm::vec3 position = glm::vec3( 0.0f, 0.0f, 1.0f );
+
+    position += mv;
+
+    view_matrix = glm::lookAt(
+        position, // Position
+        glm::vec3(position.x, position.y, position.z - 1.0f), // Look at
+        glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
+    );
+
+
 }
 
 std::string load_file( std::string filename )
