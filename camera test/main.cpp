@@ -5,9 +5,12 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <SDL2/SDL_opengl.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-const int SCREEN_WIDTH = 500;
-const int SCREEN_HEIGHT = 500;
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
 
 GLuint compile_frag_shader( std::string filename );
 GLuint compile_vert_shader( std::string filename );
@@ -46,6 +49,7 @@ int main(int argc, char* argv[])
        -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // bottom left
         1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f  // bottom right
     };
+
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
@@ -106,6 +110,16 @@ int main(int argc, char* argv[])
     glLinkProgram( shaderProgram );
     glUseProgram( shaderProgram );
     
+    // Specify matricies
+    glm::mat4 model_matix;
+    glm::mat4 view_matrix = glm::lookAt(
+        glm::vec3(0.0f, 0.0f, 1.0f), // Position
+        glm::vec3(0.0f, 0.0f, 0.0f), // Look at
+        glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
+    );
+    //                                          verticle FOV, Aspect Ratio, Near plane, far plane
+    glm::mat4 proj_matrix = glm::perspective( glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f );
+
     // Set the vertex attributes, to align with the vertex array
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -126,14 +140,28 @@ int main(int argc, char* argv[])
     // Set uniforms
     GLint tint = glGetUniformLocation( shaderProgram, "tint" );
     glUniform4f( tint, 1.0f, 1.0f, 0.0f, 1.0f );
+
     GLint line = glGetUniformLocation( shaderProgram, "line" );
     glUniform4f( line, 1.0f, 1.0f, 0.0f, 1.0f );
+
+    GLint model_uni = glGetUniformLocation( shaderProgram, "model" );
+    glUniformMatrix4fv( model_uni, 1, GL_FALSE, glm::value_ptr( model_matix ) );
+
+    GLint view_uni = glGetUniformLocation( shaderProgram, "view" );
+    glUniformMatrix4fv( view_uni, 1, GL_FALSE, glm::value_ptr( view_matrix ) );
+
+    GLint proj_uni = glGetUniformLocation( shaderProgram, "projection" );
+    glUniformMatrix4fv( proj_uni, 1, GL_FALSE, glm::value_ptr( proj_matrix ) );
 
     // Ensure the element array buffer is bound
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ebo );
 
     SDL_Event event;
     bool quit = false;
+    const Uint8* keys;
+    int mx, my;
+    Uint32 time = 0, oldtime = SDL_GetTicks();
+    float dt = 0.0f;
     while( !quit ) // START OF MAIN LOOP
     {
         // Handle window events
@@ -143,26 +171,35 @@ int main(int argc, char* argv[])
                 if( event.key.keysym.scancode == SDL_SCANCODE_ESCAPE ) quit = true;
             }
         }
+        // Get input
+        keys = SDL_GetKeyboardState(NULL);
+        SDL_GetMouseState( &mx, &my );
+
+        time = SDL_GetTicks();
+        dt = (time - oldtime) / 1000.0f;
+        oldtime = time;
+
         // Clear the window
         glClearColor( 0.2f, 0.1f, 0.2f, 1.0f );
         glClear( GL_COLOR_BUFFER_BIT );
         
-        int mx, my;
-        SDL_GetMouseState( &mx, &my );
-
         float green = mx / (float)SCREEN_WIDTH;
         float blue = my / (float)SCREEN_HEIGHT;
         float brightness = sin(SDL_GetTicks() / 1000.0f);
 
         glUniform4f( tint, 0.0, green, blue, 1.0);
-
         glUniform4f( line, brightness, brightness, brightness, 1.0);
 
-        //glDrawArrays( GL_TRIANGLES, 1, 3 );
-        glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0 );
-        
-        // Show the graphics
-        SDL_GL_SwapWindow( window );
+        if( keys[SDL_SCANCODE_RIGHT] ) model_matix = glm::translate( model_matix, glm::vec3( 1.f * dt, 0.0f, 0.0f) );
+        if( keys[SDL_SCANCODE_LEFT ] ) model_matix = glm::translate( model_matix, glm::vec3(-1.f * dt, 0.0f, 0.0f) );
+
+        // Send Matricies
+        glUniformMatrix4fv( model_uni, 1, GL_FALSE, glm::value_ptr( model_matix ) );
+        glUniformMatrix4fv( view_uni, 1, GL_FALSE, glm::value_ptr( view_matrix ) );
+        glUniformMatrix4fv( proj_uni, 1, GL_FALSE, glm::value_ptr( proj_matrix ) );
+
+        glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0 );    // Render geometry
+        SDL_GL_SwapWindow( window );                                // Show the graphics
     }
     
     // Cleanup
