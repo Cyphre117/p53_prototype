@@ -173,6 +173,10 @@ int main(int argc, char* argv[])
             if( event.type == SDL_KEYDOWN ) {
                 if( event.key.keysym.scancode == SDL_SCANCODE_ESCAPE ) quit = true;
             }
+            if( event.type == SDL_MOUSEWHEEL ) {
+                if( event.wheel.y > 0 ) move( glm::vec3( 0.0f, 0.0f, 0.1f ) );
+                else if( event.wheel.y < 0 ) move( glm::vec3( 0.0f, 0.0f, -0.1f ) );
+            }
         }
         // Get input
         keys = SDL_GetKeyboardState(NULL);
@@ -226,6 +230,8 @@ void move( glm::vec3 mv )
     static glm::vec3 position = glm::vec3( 0.0f, 0.0f, 1.0f );
 
     position += mv;
+    if( position.z <  0.2f ) position.z = 0.2f;
+    if( position.z > 10.0f ) position.z = 10.0f;
 
     view_matrix = glm::lookAt(
         position, // Position
