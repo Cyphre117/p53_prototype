@@ -15,8 +15,9 @@ const int SCREEN_HEIGHT = 600;
 
 // Specify matricies
 glm::mat4 model_matix;
+glm::vec3 position = glm::vec3( 0.0f, 0.0f, 1.0f );
 glm::mat4 view_matrix = glm::lookAt(
-    glm::vec3(0.0f, 0.0f, 1.0f), // Position
+    position, // Position
     glm::vec3(0.0f, 0.0f, 0.0f), // Look at
     glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
 );
@@ -24,6 +25,7 @@ glm::mat4 view_matrix = glm::lookAt(
 glm::mat4 proj_matrix = glm::perspective( glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f );
 
 void move( glm::vec3 mv );
+void update_cursor( GLint vbo, float x, float y);
 GLuint compile_frag_shader( std::string filename );
 GLuint compile_vert_shader( std::string filename );
 
@@ -52,18 +54,28 @@ int main(int argc, char* argv[])
     std::cout << "OpenGL version " << glGetString( GL_VERSION ) << std::endl;
 
     // Create vertex buffer object
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
+    GLuint vbo[2];
+    glGenBuffers(2, &vbo[0]);
+
+    GLfloat cursor[] = {
+        // cursor triangle
+        0.0f,  0.1f, 1.0f, 1.0f, 1.0f, 0.5f, 0.0f, // top
+       -0.1f, -0.1f, 1.0f, 1.0f, 1.0f, 0.0f, 0.5f, // bottom left
+        0.1f, -0.1f, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f  // bottom right
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cursor), cursor, GL_DYNAMIC_DRAW);
 
     GLfloat verts[] = {
+        // quad
        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top left
         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top right
        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // bottom left
-        0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f  // bottom right
+        0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // bottom right
     };
 
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 
     // Create element array
@@ -72,7 +84,8 @@ int main(int argc, char* argv[])
 
     GLushort elements[] = {
         0, 1, 2,
-        2, 3, 1
+        2, 3, 1,
+        4, 6, 5
     };
 
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ebo );
@@ -121,32 +134,30 @@ int main(int argc, char* argv[])
     glBindFragDataLocation( shaderProgram, 0, "outColour" );
     glLinkProgram( shaderProgram );
     glUseProgram( shaderProgram );
-    
 
     // Set the vertex attributes, to align with the vertex array
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    GLuint vao[2];
+    glGenVertexArrays(2, &vao[0]);
 
-    GLint positionAttrib = glGetAttribLocation( shaderProgram, "position" );
-    glEnableVertexAttribArray( positionAttrib );
-    glVertexAttribPointer( positionAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), 0 );
+    for( int i = 0; i < 2; i++ ) {
+        
+        glBindBuffer( GL_ARRAY_BUFFER, vbo[i] );
+        glBindVertexArray(vao[i]);
 
-    GLint colourAttrib = glGetAttribLocation( shaderProgram, "vColour" );
-    glEnableVertexAttribArray( colourAttrib );
-    glVertexAttribPointer( colourAttrib, 3, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(2*sizeof(GLfloat)) );
+        GLint positionAttrib = glGetAttribLocation( shaderProgram, "position" );
+        glEnableVertexAttribArray( positionAttrib );
+        glVertexAttribPointer( positionAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), 0 );
 
-    GLint texCoordAttrib = glGetAttribLocation( shaderProgram, "vTexCoord" );
-    glEnableVertexAttribArray( texCoordAttrib );
-    glVertexAttribPointer( texCoordAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat)) );
+        GLint colourAttrib = glGetAttribLocation( shaderProgram, "vColour" );
+        glEnableVertexAttribArray( colourAttrib );
+        glVertexAttribPointer( colourAttrib, 3, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(2*sizeof(GLfloat)) );
+
+        GLint texCoordAttrib = glGetAttribLocation( shaderProgram, "vTexCoord" );
+        glEnableVertexAttribArray( texCoordAttrib );
+        glVertexAttribPointer( texCoordAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat)) );
+    }
 
     // Set uniforms
-    GLint tint = glGetUniformLocation( shaderProgram, "tint" );
-    glUniform4f( tint, 1.0f, 1.0f, 0.0f, 1.0f );
-
-    GLint line = glGetUniformLocation( shaderProgram, "line" );
-    glUniform4f( line, 1.0f, 1.0f, 0.0f, 1.0f );
-
     GLint model_uni = glGetUniformLocation( shaderProgram, "model" );
     glUniformMatrix4fv( model_uni, 1, GL_FALSE, glm::value_ptr( model_matix ) );
 
@@ -190,13 +201,7 @@ int main(int argc, char* argv[])
         glClearColor( 0.2f, 0.1f, 0.2f, 1.0f );
         glClear( GL_COLOR_BUFFER_BIT );
         
-        float green = mx / (float)SCREEN_WIDTH;
-        float blue = my / (float)SCREEN_HEIGHT;
-        float brightness = sin(SDL_GetTicks() / 1000.0f);
-
-        glUniform4f( tint, 0.0, green, blue, 1.0);
-        glUniform4f( line, brightness, brightness, brightness, 1.0);
-
+        // Move the camera
         if( keys[SDL_SCANCODE_RIGHT] ) move( glm::vec3( 1.0f * dt, 0.0f, 0.0f ) );
         if( keys[SDL_SCANCODE_LEFT ] ) move( glm::vec3(-1.0f * dt, 0.0f, 0.0f ) );
         if( keys[SDL_SCANCODE_DOWN ] ) move( glm::vec3( 0.0f,-1.0f * dt, 0.0f ) );
@@ -206,9 +211,17 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv( model_uni, 1, GL_FALSE, glm::value_ptr( model_matix ) );
         glUniformMatrix4fv( view_uni, 1, GL_FALSE, glm::value_ptr( view_matrix ) );
         glUniformMatrix4fv( proj_uni, 1, GL_FALSE, glm::value_ptr( proj_matrix ) );
+        
+        if( keys[SDL_SCANCODE_SPACE] )
+            update_cursor( vbo[0], (mx / (float)SCREEN_WIDTH) * 2.0f - 1.0f, (my / (float)SCREEN_HEIGHT) * 2.0f - 1.0f );
+        glBindVertexArray( vao[1] );
+        
+        // Render geometry
+        glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0 );
+        glBindVertexArray( vao[0] );
+        glDrawArrays( GL_TRIANGLES, 0, 3 );
 
-        glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0 );    // Render geometry
-        SDL_GL_SwapWindow( window );                                // Show the graphics
+        SDL_GL_SwapWindow( window );                               // Show the graphics
     }
     
     // Cleanup
@@ -217,29 +230,61 @@ int main(int argc, char* argv[])
     glDeleteShader( fragmentShader );
 
     glDeleteBuffers( 1, &ebo );
-    glDeleteBuffers( 1, &vbo );
-    glDeleteVertexArrays( 1, &vao );
+    glDeleteBuffers( 2, &vbo[2] );
+    glDeleteVertexArrays( 2, &vao[0] );
 
     SDL_GL_DeleteContext(context);
     SDL_Quit();
     return 0;
 }
 
+void update_cursor( GLint vbo, float x, float y )
+{
+    // input: x and y in range 0:1, origin in the top left
+    // invert Y to match openGL
+    y = -y;
+    // x and y are now in clip space
+
+    glm::mat4 viewProjInv = glm::inverse( proj_matrix * view_matrix );
+    
+    glm::vec4 point3d( x, y, 0.0f, 1.0f );
+
+    point3d = viewProjInv * point3d;
+
+    std::cout << "Point: " << point3d.x << " " << point3d.y << " " << point3d.z << " " << point3d.w <<
+        " \tCam: " << position.x << " " << position.y << " " << position.z << std::endl;
+
+    point3d.x = point3d.x / point3d.w;
+    point3d.y = point3d.y / point3d.w;
+
+    x = point3d.x;
+    y = point3d.y;
+    
+    // output: x and y in world coordinates
+    GLfloat verts[] = {
+        // cursor triangle
+        0.0f + x,  0.1f + y, 1.0f, 1.0f, 1.0f, 0.5f, 0.0f, // top
+       -0.1f + x, -0.1f + y, 1.0f, 1.0f, 1.0f, 0.0f, 0.5f, // bottom left
+        0.1f + x, -0.1f + y, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f  // bottom right
+    };
+
+    // GET THIS TO DRAW CURSOR
+    glBindBuffer( GL_ARRAY_BUFFER, vbo );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(verts), verts );
+}
+
 void move( glm::vec3 mv )
 {
-    static glm::vec3 position = glm::vec3( 0.0f, 0.0f, 1.0f );
 
     position += mv;
     if( position.z <  0.2f ) position.z = 0.2f;
     if( position.z > 10.0f ) position.z = 10.0f;
 
     view_matrix = glm::lookAt(
-        position, // Position
+        position,                                             // Position
         glm::vec3(position.x, position.y, position.z - 1.0f), // Look at
-        glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
+        glm::vec3(0.0f, 1.0f, 0.0f)                           // Up vector
     );
-
-
 }
 
 std::string load_file( std::string filename )
