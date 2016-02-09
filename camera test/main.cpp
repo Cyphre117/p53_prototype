@@ -240,7 +240,7 @@ int main(int argc, char* argv[])
 
 void update_cursor( GLint vbo, float x, float y )
 {
-    // input: x and y in range 0:1, origin in the top left
+    // input: x and y in range -1:1, origin in the top left
     // invert Y to match openGL
     y = -y;
     // x and y are now in clip space
