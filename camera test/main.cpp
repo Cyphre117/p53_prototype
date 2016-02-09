@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv( view_uni, 1, GL_FALSE, glm::value_ptr( view_matrix ) );
         glUniformMatrix4fv( proj_uni, 1, GL_FALSE, glm::value_ptr( proj_matrix ) );
         
-        if( keys[SDL_SCANCODE_SPACE] )
+        //if( keys[SDL_SCANCODE_SPACE] )
             update_cursor( vbo[0], (mx / (float)SCREEN_WIDTH) * 2.0f - 1.0f, (my / (float)SCREEN_HEIGHT) * 2.0f - 1.0f );
         glBindVertexArray( vao[1] );
         
@@ -251,11 +251,16 @@ void update_cursor( GLint vbo, float x, float y )
 
     point3d = viewProjInv * point3d;
 
-    std::cout << "Point: " << point3d.x << " " << point3d.y << " " << point3d.z << " " << point3d.w <<
-        " \tCam: " << position.x << " " << position.y << " " << position.z << std::endl;
-
     point3d.x = point3d.x / point3d.w;
     point3d.y = point3d.y / point3d.w;
+    point3d.z = point3d.z / point3d.w;
+
+    //std::cout << "Point: " << point3d.x << " " << point3d.y << " " << point3d.z << " " << point3d.w <<
+    //    " \tCam: " << position.x << " " << position.y << " " << position.z << std::endl;
+
+    // experimental?!
+    point3d.x = position.x + (point3d.x - position.x) * point3d.w * position.z;
+    point3d.y = position.y + (point3d.y - position.y) * point3d.w * position.z;
 
     x = point3d.x;
     y = point3d.y;
