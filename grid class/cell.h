@@ -9,6 +9,8 @@ public:
     Cell( int row, int col );
     virtual ~Cell();
 
+    void print();
+
 protected:
 };
 

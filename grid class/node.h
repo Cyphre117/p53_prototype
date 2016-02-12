@@ -1,18 +1,22 @@
 #ifndef NODE_H
 #define NODE_H
 
-enum class NodeType { CELL,  BLOOD_VESSEL };
+#include <array>
+
+enum class NodeType { EMPTY, CELL,  BLOOD_VESSEL };
 
 class Node
 {
     public:
+        Node( int row, int col, NodeType type );
         virtual ~Node();
 
+        // Getters
+        int getRow() { return row_; }
+        int getColumn() { return col_; }
         NodeType getType() { return type_; }
 
     protected:
-        // Cannot create Nodes directly
-        Node( int row, int col, NodeType type );
 
         int row_;
         int col_;
