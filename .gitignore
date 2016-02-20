@@ -5,3 +5,4 @@
 *.exe
 *.db
 visual_studio/*
+docs/
