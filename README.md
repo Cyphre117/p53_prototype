@@ -1,7 +1,7 @@
 # hex game prototype
 ## View the doxygen generated code at
 
-cyprhre117.github.io/p53_prototype
+[cyphre117.github.io/p53_prototype](cyphre117.github.io/p53_prototype)
 
 ## Testing images
 * to load images place a file called 'images.txt' next to the executable
