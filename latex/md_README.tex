@@ -1,0 +1,12 @@
+\subsection*{Testing images}
+
+
+\begin{DoxyItemize}
+\item to load images place a file called \textquotesingle{}images.\+txt\textquotesingle{} next to the executable
+\item each line of the should contain the name and path to 1 image, relative to the executable
+\item images can be B\+M\+Ps or P\+N\+Gs with transparency
+\end{DoxyItemize}
+
+\subsection*{Compiling}
+
+required S\+D\+L2 and S\+D\+L2\+\_\+images {\ttfamily clang++ $\ast$.cpp -\/l S\+D\+L2 -\/l S\+D\+L2\+\_\+images -\/std=c++11} 
