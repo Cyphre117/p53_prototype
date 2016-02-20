@@ -29,6 +29,10 @@ void update_cursor( GLint vbo, float x, float y);
 GLuint compile_frag_shader( std::string filename );
 GLuint compile_vert_shader( std::string filename );
 
+/**
+ * The main function
+ * Doesn't currently use the command line args
+ */
 int main(int argc, char* argv[])
 {
     // Dont use cmd line ards yet
